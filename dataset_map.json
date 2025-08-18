@@ -25,7 +25,7 @@
         "sink_file" : "Olist_Reviews.csv"
     },
     {
-        "source_url" : "refs/heads/main/dataolist_orders_dataset.csv",
+        "source_url" : "refs/heads/main/data/olist_orders_dataset.csv",
         "sink_folder" : "Olist_BronzeLayer_Orders",
         "sink_file" : "Olist_Orders.csv"
     },
