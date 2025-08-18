@@ -1,0 +1,47 @@
+[
+    {
+        "source_url" : "refs/heads/main/data/olist_customers_dataset.csv",
+        "sink_folder" : "Olist_BronzeLayer_Customers",
+        "sink_file" : "Olist_Customers.csv"
+    },
+    {
+        "source_url" : "refs/heads/main/data/olist_geolocation_dataset.csv",
+        "sink_folder" : "Olist_BronzeLayer_Geolocation",
+        "sink_file" : "Olist_Geolocation.csv"
+    },
+    {
+        "source_url" : "refs/heads/main/data/olist_order_items_dataset.csv",
+        "sink_folder" : "Olist_BronzeLayer_OrderItems",
+        "sink_file" : "Olist_OrderItems.csv"
+    },
+    {
+        "source_url" : "refs/heads/main/data/olist_order_payments_dataset.csv",
+        "sink_folder" : "Olist_BronzeLayer_OrderPayments",
+        "sink_file" : "Olist_Payments.csv"
+    },
+    {
+        "source_url" : "refs/heads/main/data/olist_order_reviews_dataset.csv",
+        "sink_folder" : "Olist_BronzeLayer_OrderReviews",
+        "sink_file" : "Olist_Reviews.csv"
+    },
+    {
+        "source_url" : "refs/heads/main/dataolist_orders_dataset.csv",
+        "sink_folder" : "Olist_BronzeLayer_Orders",
+        "sink_file" : "Olist_Orders.csv"
+    },
+    {
+        "source_url" : "refs/heads/main/data/olist_products_dataset.csv",
+        "sink_folder" : "Olist_BronzeLayer_Products",
+        "sink_file" : "Olist_Products.csv"
+    },
+    {
+        "source_url" : "refs/heads/main/data/olist_sellers_dataset.csv",
+        "sink_folder" : "Olist_BronzeLayer_Sellers",
+        "sink_file" : "Olist_Sellers.csv"
+    },
+    {
+        "source_url" : "refs/heads/main/data/product_category_name_translation.csv",
+        "sink_folder" : "Olist_BronzeLayer_ProdCatNameTranslation",
+        "sink_file" : "Olist_ProdCatNameTranslation.csv"
+    }
+]
