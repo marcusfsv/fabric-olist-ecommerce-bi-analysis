@@ -1,0 +1,13 @@
+-- Creating fact_order_payments
+DROP TABLE IF EXISTS fact.fact_order_payments;
+
+CREATE TABLE fact.fact_order_payments AS
+SELECT
+    CAST(op.order_id AS VARCHAR(64)) AS order_id,  -- degenerate key
+    dpt.payment_type_sk,
+    op.payment_sequential,
+    op.payment_installments,
+    op.payment_value
+FROM stg.stg_order_payments op
+JOIN dim.dim_payment_type dpt
+    ON dpt.payment_type = op.payment_type;

@@ -1,0 +1,18 @@
+-- Create a new dim_seller table
+DROP TABLE IF EXISTS dim.dim_sellers;
+
+CREATE TABLE dim.dim_sellers AS
+SELECT
+    ROW_NUMBER() OVER (ORDER BY seller_id) AS seller_sk,  -- surrogate key
+    s.seller_id,
+    g.geo_sk  -- from dim_geolocation, joined on (zip,state)
+FROM (
+    SELECT DISTINCT
+        seller_id,
+        seller_zip_code_prefix,
+        seller_state
+    FROM stg.stg_sellers
+) s
+LEFT JOIN dim.dim_geolocation g
+    ON g.geolocation_zip_code_prefix = s.seller_zip_code_prefix
+    AND g.geolocation_state = s.seller_state;

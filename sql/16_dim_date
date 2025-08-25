@@ -1,0 +1,30 @@
+-- Create the table dim_date
+DROP TABLE IF EXISTS dim.dim_date;
+
+CREATE TABLE dim.dim_date AS
+WITH bounds AS (
+    SELECT CAST('2016-01-01' AS DATE) AS dmin,
+           CAST('2020-12-31' AS DATE) AS dmax
+),
+nums AS (  -- generate 0..N using your own rows (enough to cover the span)
+    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n
+    FROM stg.stg_orders
+),
+series AS (
+    SELECT DATEADD(DAY, n.n, b.dmin) AS [date]
+    FROM bounds b
+    JOIN nums   n
+      ON n.n <= DATEDIFF(DAY, b.dmin, b.dmax)
+)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY [date]) AS date_sk,   -- surrogate key
+    [date],
+    YEAR([date]) AS [year],
+    DATEPART(QUARTER, [date]) AS [quarter],
+    MONTH([date]) AS [month],
+    CAST(DATENAME(MONTH, [date]) AS VARCHAR(20)) AS month_name,
+    DAY([date]) AS [day],
+    DATEPART(WEEKDAY, [date]) AS weekday_num,
+    CAST(DATENAME(WEEKDAY, [date]) AS VARCHAR(20)) AS weekday_name,
+    IIF(DATEPART(WEEKDAY, [date]) IN (1,7), 1, 0) AS is_weekend
+FROM series;

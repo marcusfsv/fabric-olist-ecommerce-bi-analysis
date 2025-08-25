@@ -1,0 +1,90 @@
+/* 
+
+The stg_geolocation table contains the flag flag_nonalpha_city. 
+The flagged city contain names with non-alphabetic characters, which might indicate a problem.
+Given that this table has several latitudes and longitudes for each combination of zip code, city, and state,
+and that we won't add them to dim_geolocation, we can select distinct combinations of zip code and state, 
+and select the most frequent city.
+
+*/
+
+-- Create a new dim_geolocation table
+DROP TABLE IF EXISTS dim.dim_geolocation;
+
+CREATE TABLE dim.dim_geolocation AS
+-- Aggregate counts per (zip, state, city)
+WITH city_counts AS (
+    SELECT
+        geolocation_zip_code_prefix AS zip,
+        geolocation_state AS state,
+        geolocation_city AS city,
+        COUNT(*) AS cnt
+    FROM stg.stg_geolocation
+    GROUP BY geolocation_zip_code_prefix, geolocation_state, geolocation_city
+),
+-- Rank cities by frequency desc
+ranked AS (
+    SELECT
+        zip, state, city, cnt,
+        COUNT(*) OVER (PARTITION BY zip, state) AS city_variants,
+        ROW_NUMBER() OVER (PARTITION BY zip, state ORDER BY cnt DESC, city ASC) AS rnk
+    FROM city_counts
+)
+-- Keep only rnk = 1
+SELECT
+    ROW_NUMBER() OVER (ORDER BY zip, state) AS geo_sk,  -- surrogate key
+    zip AS geolocation_zip_code_prefix,
+    state AS geolocation_state,
+    city AS geolocation_city,
+    city_variants,
+    CASE WHEN city_variants > 1 THEN 1 ELSE 0 END AS flag_city_conflict  -- when there were multiple city spellings for the same ZIP+state
+FROM ranked
+WHERE rnk = 1;
+
+/* 
+
+Some zip locations are present in the table customers/sellers but not in geolocation.
+We can seed it with city from customers.
+
+-- Insert missing ZIP+state+city into dim_geolocation
+INSERT INTO dim.dim_geolocation (geolocation_zip_code_prefix, geolocation_city, geolocation_state)
+SELECT DISTINCT
+    c.customer_zip_code_prefix,
+    c.customer_city,
+    c.customer_state
+FROM stg.stg_customers c
+LEFT JOIN dim.dim_geolocation g
+       ON g.geolocation_zip_code_prefix = c.customer_zip_code_prefix
+      AND g.geolocation_state = c.customer_state
+WHERE g.geo_sk IS NULL;   -- only those not yet in dim_geolocation
+
+*/
+
+-- Create a list of needed (zip,state) not in dim_geolocation
+WITH want AS (
+    SELECT DISTINCT customer_zip_code_prefix AS zip, customer_state AS state
+    FROM stg.stg_customers
+    UNION
+    SELECT DISTINCT seller_zip_code_prefix, seller_state
+    FROM stg.stg_sellers
+),
+have AS (
+    SELECT geolocation_zip_code_prefix AS zip, geolocation_state AS state
+    FROM dim.dim_geolocation
+),
+to_add AS (
+    SELECT w.zip, w.state
+    FROM want w
+    LEFT JOIN have h ON h.zip = w.zip AND h.state = w.state
+    WHERE h.zip IS NULL
+)
+-- Insert new rows with NULL city (or a best guess if you prefer)
+INSERT INTO dim.dim_geolocation
+SELECT
+    (SELECT COALESCE(MAX(geo_sk),0) FROM dim.dim_geolocation) + ROW_NUMBER() OVER (ORDER BY zip, state) AS geo_sk,
+    zip AS geolocation_zip_code_prefix,
+    state AS geolocation_state,
+    'unknown' AS geolocation_city,
+    0 AS city_variants,
+    0 AS flag_city_conflict
+FROM to_add;

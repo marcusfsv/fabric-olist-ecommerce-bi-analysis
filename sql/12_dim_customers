@@ -1,0 +1,20 @@
+-- Create a new dim_customers table
+DROP TABLE IF EXISTS dim.dim_customers;
+
+CREATE TABLE dim.dim_customers AS
+SELECT
+    ROW_NUMBER() OVER (ORDER BY customer_id) AS customer_sk,  -- surrogate key
+    c.customer_id,
+    c.customer_unique_id,
+    g.geo_sk  -- from dim_geolocation, joined on (zip,state)
+FROM (
+    SELECT DISTINCT
+        customer_id,
+        customer_unique_id,
+        customer_zip_code_prefix,
+        customer_state
+    FROM stg.stg_customers
+) c
+LEFT JOIN dim.dim_geolocation g
+    ON g.geolocation_zip_code_prefix = c.customer_zip_code_prefix
+    AND g.geolocation_state = c.customer_state;

@@ -1,0 +1,21 @@
+-- Creating fact_order_items
+DROP TABLE IF EXISTS fact.fact_order_items;
+
+CREATE TABLE fact.fact_order_items AS
+SELECT
+    CAST(oi.order_id AS VARCHAR(64)) AS order_id,  -- degenerate key
+    CAST(oi.order_item_id AS INT) AS order_item_id,  -- line sequence within the order
+    dp.product_sk,  -- FK to dim_products
+    ds.seller_sk,  -- FK to dim_sellers
+    dd.date_sk AS shipping_limit_date_sk,  -- FK to dim_date (by DATE)
+    CAST(oi.price AS DECIMAL(18,2)) AS price,
+    CAST(oi.freight_value AS DECIMAL(18,2)) AS freight_value,
+    CAST(1 AS INT) AS quantity,
+    (oi.price + oi.freight_value) AS line_total
+FROM stg.stg_order_items oi
+LEFT JOIN dim.dim_products dp
+    ON dp.product_id = oi.product_id
+LEFT JOIN dim.dim_sellers ds
+    ON ds.seller_id = oi.seller_id
+LEFT JOIN dim.dim_date dd
+    ON dd.[date] = CAST(oi.shipping_limit_date AS DATE);

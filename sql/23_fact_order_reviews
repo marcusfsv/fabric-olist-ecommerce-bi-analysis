@@ -1,0 +1,22 @@
+/*
+
+The stg_order_reviews table contains the flag flag_missing_value. 
+It indicates that there's at least one review_comment_title or review_comment_message missing.
+However, we are more interested in the review_score, therefore we can proceed.
+
+*/
+
+-- Creating fact_order_reviews
+DROP TABLE IF EXISTS fact.fact_order_reviews;
+
+CREATE TABLE fact.fact_order_reviews AS
+SELECT
+    CAST(r.review_id AS VARCHAR(64)) AS review_id,
+    CAST(r.order_id  AS VARCHAR(64)) AS order_id,
+    d.date_sk AS review_date_sk,  -- FK to dim_date
+    
+    r.review_score,
+    r.flag_missing_value
+FROM stg.stg_order_reviews r
+LEFT JOIN dim.dim_date d
+  ON d.[date] = CAST(r.review_answer_timestamp AS DATE); 

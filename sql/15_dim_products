@@ -1,0 +1,22 @@
+/* 
+
+The stg_products table contains the flag flag_missing_product_info. 
+It indicates that there's at least one missing piece of product information. There are no problems with product_id.
+Since we are interested in the translated product_category_name, and the missing info was replaced with 'Unknown',
+we can create proceed with creating the table dim_products.
+
+*/
+
+-- Create a new dim_products table
+DROP TABLE IF EXISTS dim.dim_products;
+
+CREATE TABLE dim.dim_products AS
+SELECT
+    DENSE_RANK() OVER (ORDER BY product_id) AS product_sk,  -- surrogate key
+    product_id,
+    product_category_name,
+    flag_missing_product_info
+FROM (
+    SELECT DISTINCT product_id, product_category_name, flag_missing_product_info
+    FROM stg.stg_products
+) p;

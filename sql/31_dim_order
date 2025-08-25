@@ -1,0 +1,14 @@
+-- Create dim_order table
+DROP TABLE IF EXISTS dim.dim_order;
+
+CREATE TABLE dim.dim_order AS
+SELECT DISTINCT CAST(order_id AS VARCHAR(64)) AS order_id
+FROM (
+  SELECT order_id FROM fact.fact_orders
+  UNION ALL
+  SELECT order_id FROM fact.fact_order_items
+  UNION ALL
+  SELECT order_id FROM fact.fact_order_payments
+  UNION ALL
+  SELECT order_id FROM fact.fact_order_reviews
+) u;
